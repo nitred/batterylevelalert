@@ -3,8 +3,14 @@ import wmi
 import ctypes
 import time
 
-connect_flag = True
-disconnect_flag = True
+#For Development
+DEBUG = False
+FAIL_SILENTLY = True
+ONE_TIME_ALERT_ONLY = True
+
+#Code Init Values
+ShouldStartCharging = True
+ShouldStopCharging = True
 
 connect_charger = """Battery Level < 40%
 Charging State : Disconnected
@@ -32,39 +38,55 @@ def get_batstats():
 
 
 def do_batlogic():
-    global connect_flag, disconnect_flag
+    global ShouldStartCharging, ShouldStopCharging
+    
     charge_capacity, charge_current, charge_status = get_batstats()
     charge_percentage = charge_current / charge_capacity * 100
-    #print str(charge_percentage), str(charge_status)
+    if DEBUG:
+        print str(charge_percentage), str(charge_status)
 
-    #If Annoying Alerts is what you're going for then uncomment the following
-    '''
-    if not charge_status:
-        #If not charging, then "Connect" is possible so...
-        connect_flag = True
-    else:
-        #If charging, then "Disconnect" is possible so...
-        disconnect_flag = True
-    '''
+    IS_CHARGING = charge_status
+    IS_DISCHARGING = not IS_CHARGING
 
-    if charge_percentage < 40 and not charge_status and connect_flag:
+    if IS_DISCHARGING:
+        #Reset Start Charging Alter Toggle
+        ShouldStopCharging = True
+        if DEBUG:
+            print "Should Stop Charging == True"
+    elif IS_CHARGING:
+        #Reset Stop Charging Alert Toggle
+        ShouldStartCharging = True
+        if DEBUG:
+            print "Should Start Charging == True"
+
+    if charge_percentage < 40 and IS_DISCHARGING and ShouldStartCharging:
         Mbox('Battery Level Alert', connect_charger, 0)
-        #Setting the flags anyway so that the Alert occurs only once whether
-        #the user actually plugs the charger in or not (Can get annoying otherwise)
-        connect_flag = False
-        disconnect_flag = True
-    elif charge_percentage > 80 and charge_status and disconnect_flag:
+        if ONE_TIME_ALERT_ONLY:
+            ShouldStartCharging = False
+        else:
+            pass
+    elif charge_percentage > 80 and IS_CHARGING and ShouldStopCharging:
         Mbox('Battery Level Alert', disconnect_charger, 0)
-        disconnect_flag = False
-        connect_flag = True
+        if ONE_TIME_ALERT_ONLY:
+            ShouldStopCharging = False
+        else:
+            pass
 
 while True:
-    time.sleep(60)
-    print "Once"
-    try:
+    time.sleep(5)
+    if FAIL_SILENTLY:        
+        try:
+            if DEBUG:
+                print "Cycling..."
+            do_batlogic()
+        except:
+            if DEBUG:
+                print "Error... Stopping Cycles"
+            break
+    else:
+       if DEBUG:
+                print "Error... Stopping Cycles"
         do_batlogic()
-    except:
-        break
 
 sys.exit()
 
