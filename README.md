@@ -14,3 +14,4 @@ I'm currently testing on a DELL STUDIO LAPTOP running Windows 7
 - I've written a script for myself in Python 2.7.6 and converted it into a Windows .exe file using Py2exe which is very easy to do. 
 - If you're on Linux you can just remove the timer part of the script and use a cron job to run it every minute(so I've heard).
 - I have no experience with Macs
+=======

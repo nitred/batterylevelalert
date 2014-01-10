@@ -4,11 +4,11 @@ import ctypes
 import time
 
 #For Development
-DEBUG = False
-FAIL_SILENTLY = True
-ONE_TIME_ALERT_ONLY = True
+DEBUG = True
+FAIL_SILENTLY = False
 
-#Code Init Values
+#For Code
+ONE_TIME_ALERT_ONLY = True
 ShouldStartCharging = True
 ShouldStopCharging = True
 
@@ -49,28 +49,41 @@ def do_batlogic():
     IS_DISCHARGING = not IS_CHARGING
 
     if IS_DISCHARGING:
-        #Reset Start Charging Alter Toggle
+        #Reset Stop Charging Alter Toggle
         ShouldStopCharging = True
         if DEBUG:
             print "Should Stop Charging == True"
     elif IS_CHARGING:
-        #Reset Stop Charging Alert Toggle
+        #Reset Start Charging Alert Toggle
         ShouldStartCharging = True
         if DEBUG:
             print "Should Start Charging == True"
 
-    if charge_percentage < 40 and IS_DISCHARGING and ShouldStartCharging:
-        Mbox('Battery Level Alert', connect_charger, 0)
+    #Special case when the laptop stops charging at 100%
+    if charge_percentage == 100 and ShouldStopCharging:
+        Mbox('Battery Level Alert', disconnect_charger, 0)
         if ONE_TIME_ALERT_ONLY:
-            ShouldStartCharging = False
+            ShouldStopCharging = False
         else:
             pass
+        if DEBUG:
+            print "100% Charge"
     elif charge_percentage > 80 and IS_CHARGING and ShouldStopCharging:
         Mbox('Battery Level Alert', disconnect_charger, 0)
         if ONE_TIME_ALERT_ONLY:
             ShouldStopCharging = False
         else:
             pass
+        if DEBUG:
+            print "> 80 Charge"
+    elif charge_percentage < 40 and IS_DISCHARGING and ShouldStartCharging:
+        Mbox('Battery Level Alert', connect_charger, 0)
+        if ONE_TIME_ALERT_ONLY:
+            ShouldStartCharging = False
+        else:
+            pass
+        if DEBUG:
+            print "< 40% Charge"
 
 while True:
     time.sleep(5)
@@ -84,8 +97,8 @@ while True:
                 print "Error... Stopping Cycles"
             break
     else:
-       if DEBUG:
-                print "Error... Stopping Cycles"
+        if DEBUG:
+            print "Cycling..."
         do_batlogic()
 
 sys.exit()
