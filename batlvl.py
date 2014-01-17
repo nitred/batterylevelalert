@@ -1,27 +1,3 @@
-import sys
-import wmi
-import ctypes
-import time
-
-#For Development
-DEBUG = True
-FAIL_SILENTLY = False
-
-#For Code
-ONE_TIME_ALERT_ONLY = True
-ShouldStartCharging = True
-ShouldStopCharging = True
-
-connect_charger = """Battery Level < 40%
-Charging State : Disconnected
-
-*** CONNECT CHARGER ***"""
-
-disconnect_charger = """Battery Level > 80%
-Charging State  : Connected
-
-*** DISCONNECT CHARGER ***"""
-
 def Mbox(title, text, style):
     ctypes.windll.user32.MessageBoxA(0, text, title, style)
 
